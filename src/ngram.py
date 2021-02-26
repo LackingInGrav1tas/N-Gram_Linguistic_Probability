@@ -6,7 +6,7 @@ class NGramConstants(enum.Enum):
     B_OF_SENTENCE = 1
     E_OF_SENTENCE = 2
     DECIMAL = 3
-    LOGRITHMIC = 4
+    LOGARITHMIC = 4
 
 class NGramError(Exception):
     pass
@@ -104,7 +104,7 @@ class NGramModel:
                 pat.append(tokens[i])
         return self._probabilities.get((pat, word))
 
-    def sent_probability(self, sentence, type=NGramConstants.LOGRITHMIC):
+    def sent_probability(self, sentence, type=NGramConstants.LOGARITHMIC):
         """Returns the probability of a sentence occuring"""
         if self.normalize:
             sentence = sentence.lower()

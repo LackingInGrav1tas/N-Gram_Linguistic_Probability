@@ -31,9 +31,9 @@ Parses the pattern and matches the word. returns the n-gram probabilty of a phra
 
 
 ```Python
-sent_probability(self, sentence)
+sent_probability(self, sentence, type=NGramConstants.LOGARITHMIC)
 ```
-Returns the probability of a sentence with length >= N + 1 occuring.
+Returns the probability of a sentence with length >= N + 1 occuring. Default calculation method is logarithmic.
 
 
 ## Example: ##
