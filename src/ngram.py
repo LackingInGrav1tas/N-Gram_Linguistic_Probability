@@ -1,9 +1,12 @@
 import nltk
 import enum
+import math
 
 class NGramConstants(enum.Enum):
     B_OF_SENTENCE = 1
     E_OF_SENTENCE = 2
+    DECIMAL = 3
+    LOGRITHMIC = 4
 
 class NGramError(Exception):
     pass
@@ -101,7 +104,7 @@ class NGramModel:
                 pat.append(tokens[i])
         return self._probabilities.get((pat, word))
 
-    def sent_probability(self, sentence):
+    def sent_probability(self, sentence, type=NGramConstants.LOGRITHMIC):
         """Returns the probability of a sentence occuring"""
         if self.normalize:
             sentence = sentence.lower()
@@ -125,10 +128,16 @@ class NGramModel:
                     pat.append(NGramConstants.B_OF_SENTENCE)
             else:
                 pat.append(tokens[i])
-        p = 1
-        for i in range(self.n, len(pat)):
-            p *= self._probabilities.get((pat[i-self.n:i], pat[i]))
-        return p
+        if type == NGramConstants.DECIMAL:
+            p = 1
+            for i in range(self.n, len(pat)):
+                p *= self._probabilities.get((pat[i-self.n:i], pat[i]))
+            return p
+        else: # Logarithmic prevents underflow
+            p = 0
+            for i in range(self.n, len(pat)):
+                p += math.log(self._probabilities.get((pat[i-self.n:i], pat[i])))
+            return math.exp(p)
 
 def main():
     print("N-Gram Demonstration:\n")
