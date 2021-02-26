@@ -1,7 +1,7 @@
 import nltk
 import enum
 
-class Constants(enum.Enum):
+class NGramConstants(enum.Enum):
     B_OF_SENTENCE = 1
     E_OF_SENTENCE = 2
 
@@ -41,8 +41,8 @@ class NGramModel:
         pre_tokens = []
         for sentence in s_tokens:
             w_tokens = nltk.word_tokenize(sentence)[0:-1]
-            w_tokens.append(Constants.E_OF_SENTENCE)
-            w_tokens.insert(0, Constants.B_OF_SENTENCE)
+            w_tokens.append(NGramConstants.E_OF_SENTENCE)
+            w_tokens.insert(0, NGramConstants.B_OF_SENTENCE)
             pre_tokens.append(w_tokens)
 
         # flattening
@@ -85,25 +85,52 @@ class NGramModel:
         pat = []
         for i in range(len(tokens)):
             if tokens[i] == ".":
-                pat.append(Constants.E_OF_SENTENCE)
+                pat.append(NGramConstants.E_OF_SENTENCE)
                 if i != len(tokens)-1:
-                    pat.append(Constants.B_OF_SENTENCE)
+                    pat.append(NGramConstants.B_OF_SENTENCE)
             elif tokens[i] == "$":
                 if i != 0:
                     if tokens[i-1] == "\\":
                         pat.pop()
-                        pat.append(Constants.B_OF_SENTENCE)
+                        pat.append(NGramConstants.B_OF_SENTENCE)
                     else:
                         pat.append(tokens[i])
                 else:
-                    pat.append(tokens[i])
+                    pat.append(NGramConstants.B_OF_SENTENCE)
             else:
                 pat.append(tokens[i])
         return self._probabilities.get((pat, word))
 
+    def sent_probability(self, sentence):
+        """Returns the probability of a sentence occuring"""
+        if self.normalize:
+            sentence = sentence.lower()
+        tokens = nltk.word_tokenize(sentence)
+        if len(tokens) < self.n+1:
+            return 0
+        pat = []
+        for i in range(len(tokens)):
+            if tokens[i] == ".":
+                pat.append(NGramConstants.E_OF_SENTENCE)
+                if i != len(tokens)-1:
+                    pat.append(NGramConstants.B_OF_SENTENCE)
+            elif tokens[i] == "$":
+                if i != 0:
+                    if tokens[i-1] == "\\":
+                        pat.pop()
+                        pat.append(NGramConstants.B_OF_SENTENCE)
+                    else:
+                        pat.append(tokens[i])
+                else:
+                    pat.append(NGramConstants.B_OF_SENTENCE)
+            else:
+                pat.append(tokens[i])
+        p = 1
+        for i in range(self.n, len(pat)):
+            p *= self._probabilities.get((pat[i-self.n:i], pat[i]))
+        return p
 
 def main():
-    
     print("N-Gram Demonstration:\n")
     
     bigram = NGramModel(2, "This is sentence 1. This is sentence 2.")
@@ -111,7 +138,11 @@ def main():
     print('bi-gram analysis ("This", "is"):      ' , bigram.probability("This", "is"))
 
     trigram = NGramModel(3, """It didn't start out here. Not with the scramblers or Rorshach, not with Big Ben or Theseus or the vampires. Most people would say it started with the Fireflies, but they'd be wrong. It ended with those things""", True)
-    print('tri-gram analysis ("not with", "the"):', trigram.probability("not with", "the"))
+    print('\ntri-gram analysis ("not with", "the"):', trigram.probability("not with", "the"))
+    print('tri-gram analysis ("$ it", "ended"):  ', trigram.probability("$ it", "ended"))
+
+    bigram = NGramModel(2, "I want Chinese food. I want English food.", True)
+    print("\nbi-gram sentence analysis (same w/ tri-gram):", bigram.sent_probability("$ I want english food."))
 
 if __name__ == "__main__":
     main()
