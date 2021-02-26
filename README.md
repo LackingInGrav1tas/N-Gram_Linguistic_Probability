@@ -13,7 +13,7 @@ tri-gram analysis ("not with", "the"): 0.5
 
 ## Documentation: ##
 
-### ```NGramModel```member functions: ###
+### ```NGramModel``` member functions: ###
 ```Python
 __init__(self, n, corpus, normalization):
 ```
