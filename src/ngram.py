@@ -88,6 +88,15 @@ class NGramModel:
                 pat.append(Constants.E_OF_SENTENCE)
                 if i != len(tokens)-1:
                     pat.append(Constants.B_OF_SENTENCE)
+            elif tokens[i] == "$":
+                if i != 0:
+                    if tokens[i-1] == "\\":
+                        pat.pop()
+                        pat.append(Constants.B_OF_SENTENCE)
+                    else:
+                        pat.append(tokens[i])
+                else:
+                    pat.append(tokens[i])
             else:
                 pat.append(tokens[i])
         return self._probabilities.get((pat, word))
