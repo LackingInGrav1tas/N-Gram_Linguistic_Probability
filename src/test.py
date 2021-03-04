@@ -6,4 +6,5 @@ from nltk.corpus import gutenberg
 for file in gutenberg.fileids():
     print("processing", file, " ->", len(gutenberg.raw(file)))
     bigram = ngram.NGramModel(2, gutenberg.raw(file), True)
-    print(file, ":", bigram.probability("this", "is"))
+    sent = ngram.detokenize(bigram.random_sentence())
+    print(file, ":", sent, ": %", bigram.sent_probability(sent))

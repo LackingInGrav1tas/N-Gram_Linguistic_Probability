@@ -1,12 +1,28 @@
 import nltk
 import enum
 import math
+import random
 
 class NGramConstants(enum.Enum):
     B_OF_SENTENCE = 1
     E_OF_SENTENCE = 2
     DECIMAL = 3
     LOGARITHMIC = 4
+
+def detokenize(tokens):
+    s = ""
+    for token in tokens:
+        if token in [NGramConstants.B_OF_SENTENCE, NGramConstants.E_OF_SENTENCE, ","] and len(s) > 0:
+            l = list(s)
+            l.pop()
+            s = ""
+            for c in l:
+                s += c
+        if token in [NGramConstants.E_OF_SENTENCE]:
+            s += "."
+        elif token != NGramConstants.B_OF_SENTENCE:
+            s += token + " "
+    return s
 
 class NGramError(Exception):
     pass
@@ -76,6 +92,31 @@ class NGramModel:
             key = follow_count.keys[i]
             self._probabilities.add( key, follow_count.get( key )  / words.get(key[0]) )
 
+    def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], most_likely=False):
+        """Returns a randomly generated, likely sentence. Only works with bigram models"""
+        if self.n != 1:
+            return None
+        if not most_likely:
+            while sentence[-1] != NGramConstants.E_OF_SENTENCE:
+                pair = self._probabilities.keys[random.randrange(len(self._probabilities.keys))]
+                if pair[0][0] == sentence[-1]:
+                    sentence.append(pair[1])
+        else:
+            while True:
+                pair = self._probabilities.keys[random.randrange(len(self._probabilities.keys))]
+                if pair[0][0] == sentence[-1]:
+                    sentence.append(pair[1])
+                    break
+            while sentence[-1] != NGramConstants.E_OF_SENTENCE:
+                most = (None, 0)
+                for i in range(len(self._probabilities.keys)):
+                    key = self._probabilities.keys[i]
+                    if key[0][0] == sentence[-1]:
+                        if self._probabilities.vals[i] > most[1]:
+                            most = (key[1], self._probabilities.vals[i])
+                sentence.append(most[0])
+        return sentence
+
     def probability(self, pattern, word):
         """"Analyzes how many times a pattern, with n words, occurs followed by specified word"""
         if self.normalize:
@@ -87,7 +128,7 @@ class NGramModel:
             raise NGramError
         pat = []
         for i in range(len(tokens)):
-            if tokens[i] == ".":
+            if tokens[i] in [".", "!", "?"]:
                 pat.append(NGramConstants.E_OF_SENTENCE)
                 if i != len(tokens)-1:
                     pat.append(NGramConstants.B_OF_SENTENCE)
