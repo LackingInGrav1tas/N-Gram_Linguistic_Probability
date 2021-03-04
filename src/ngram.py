@@ -183,7 +183,8 @@ class NGramModel:
                     p += math.log(self._probabilities.get((pat[i-self.n:i], pat[i])))
                 except ValueError:
                     print("probability error. pat:", pat[i-self.n:i], pat[i])
-                    raise ValueError
+                    print((pat[i-self.n:i], pat[i]) in self._probabilities.keys)
+                    exit()
             return math.exp(p)
 
 def main():
