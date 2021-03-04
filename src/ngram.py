@@ -93,25 +93,27 @@ class NGramModel:
             self._probabilities.add( key, follow_count.get( key )  / words.get(key[0]) )
 
     def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], most_likely=False):
-        """Returns a randomly generated, likely sentence. Only works with bigram models"""
-        if self.n != 1:
+        """Returns a randomly generated sentence."""
+        if self.n != len(sentence):
+            print(self.n, len(sentence), sentence)
             return None
         if not most_likely:
             while sentence[-1] != NGramConstants.E_OF_SENTENCE:
                 pair = self._probabilities.keys[random.randrange(len(self._probabilities.keys))]
-                if pair[0][0] == sentence[-1]:
+                # print(pair[0])
+                if pair[0] == sentence[-self.n:]:
                     sentence.append(pair[1])
         else:
             while True:
                 pair = self._probabilities.keys[random.randrange(len(self._probabilities.keys))]
-                if pair[0][0] == sentence[-1]:
+                if pair[0] == sentence[self.n:-1]:
                     sentence.append(pair[1])
                     break
             while sentence[-1] != NGramConstants.E_OF_SENTENCE:
                 most = (None, 0)
                 for i in range(len(self._probabilities.keys)):
                     key = self._probabilities.keys[i]
-                    if key[0][0] == sentence[-1]:
+                    if key[0] == sentence[-self.n:]:
                         if self._probabilities.vals[i] > most[1]:
                             most = (key[1], self._probabilities.vals[i])
                 sentence.append(most[0])
@@ -177,7 +179,11 @@ class NGramModel:
         else: # Logarithmic prevents underflow
             p = 0
             for i in range(self.n, len(pat)):
-                p += math.log(self._probabilities.get((pat[i-self.n:i], pat[i])))
+                try:
+                    p += math.log(self._probabilities.get((pat[i-self.n:i], pat[i])))
+                except ValueError:
+                    print("probability error. pat:", pat[i-self.n:i], pat[i])
+                    raise ValueError
             return math.exp(p)
 
 def main():
