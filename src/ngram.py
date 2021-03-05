@@ -12,7 +12,7 @@ class NGramConstants(enum.Enum):
 def detokenize(tokens):
     s = ""
     for token in tokens:
-        if token in [NGramConstants.B_OF_SENTENCE, NGramConstants.E_OF_SENTENCE, ","] and len(s) > 0:
+        if (token in [NGramConstants.B_OF_SENTENCE, NGramConstants.E_OF_SENTENCE, ","] or token[0] == "'") and len(s) > 0:
             l = list(s)
             l.pop()
             s = ""
