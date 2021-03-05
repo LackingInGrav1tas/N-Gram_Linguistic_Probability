@@ -95,12 +95,16 @@ class NGramModel:
     def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], most_likely=False):
         """Returns a randomly generated sentence."""
         if self.n != len(sentence):
-            print(self.n, len(sentence), sentence)
-            return None
+            sentence = [NGramConstants.B_OF_SENTENCE]
+            for i in range(1, self.n):
+                while True:
+                    pair = self._probabilities.keys[random.randrange(len(self._probabilities.keys))]
+                    if pair[0][i] == sentence[-1]:
+                        sentence.append(pair[1])
+                        break
         if not most_likely:
             while sentence[-1] != NGramConstants.E_OF_SENTENCE:
                 pair = self._probabilities.keys[random.randrange(len(self._probabilities.keys))]
-                # print(pair[0])
                 if pair[0] == sentence[-self.n:]:
                     sentence.append(pair[1])
         else:
