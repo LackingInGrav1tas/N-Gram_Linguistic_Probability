@@ -6,8 +6,10 @@ import random
 class NGramConstants(enum.Enum):
     B_OF_SENTENCE = 1
     E_OF_SENTENCE = 2
-    DECIMAL = 3
-    LOGARITHMIC = 4
+    NONE = 3
+    LAPLACE = 4
+    DECIMAL = 5
+    LOGARITHMIC = 6
 
 def detokenize(tokens):
     s = ""
@@ -49,7 +51,7 @@ class Map:
             self.vals[self.keys.index(k)] = v
 
 class NGramModel:
-    def __init__(self, n, corpus, normalize=False):
+    def __init__(self, n, corpus, normalize=False, smoothing=NGramConstants.NONE):
         """Initializes an n-gram. The param n determines the pattern length"""
         self.normalize = normalize
         if normalize:
@@ -88,9 +90,15 @@ class NGramModel:
         
         self._probabilities = Map()
 
-        for i in range(len(follow_count.keys)):
-            key = follow_count.keys[i]
-            self._probabilities.add( key, follow_count.get( key )  / words.get(key[0]) )
+        if smoothing == NGramConstants.LAPLACE:
+            for i in range(len(follow_count.keys)):
+                key = follow_count.keys[i]
+                self._probabilities.add( key, (follow_count.get( key ) + 1)  / ( words.get(key[0]) + len(words.keys)) )
+        else:
+            for i in range(len(follow_count.keys)):
+                key = follow_count.keys[i]
+                self._probabilities.add( key, follow_count.get( key )  / words.get(key[0]) )
+
 
     def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], most_likely=False):
         """Returns a randomly generated sentence."""
