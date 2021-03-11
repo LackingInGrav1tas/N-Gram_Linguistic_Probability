@@ -72,30 +72,22 @@ class NGramModel:
             w_tokens.insert(0, NGramConstants.B_OF_SENTENCE)
             pre_tokens.append(w_tokens)
 
-        # flattening
-        tokens = []
-        for sentence in pre_tokens:
-            for token in sentence:
-                tokens.append(token)
+        tokens = nltk.flatten(pre_tokens)
 
         words = Map()
+        follow_count = Map()
 
         for i in range(n, len(tokens)+1):
             trange = tokens[i-n:i]
             if not words.contains(trange):
                 words.add(trange, 0)
             words.change(trange, words.get(trange) + 1)
+            if i != len(tokens):
+                if not follow_count.contains((trange, tokens[i])):
+                    follow_count.add((trange, tokens[i]), 0)
+                follow_count.change((trange, tokens[i]), follow_count.get((trange, tokens[i])) + 1)
         
-        self.word_len = len(words.keys)
-
-        follow_count = Map()
-
-        for i in range(n, len(tokens)):
-            trange = tokens[i-n:i]
-            if not follow_count.contains((trange, tokens[i])):
-                follow_count.add((trange, tokens[i]), 0)
-            follow_count.change((trange, tokens[i]), follow_count.get((trange, tokens[i])) + 1)
-        
+        self.word_len = len(words.keys)  
         self._probabilities = Map()
 
         for i in range(len(follow_count.keys)):
