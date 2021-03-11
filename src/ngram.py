@@ -103,7 +103,7 @@ class NGramModel:
             self._probabilities.add( key, ( follow_count.get( key ),  words.get(key[0]) ) )
 
 
-    def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], smoothing=NGramConstants.NONE, most_likely=False):
+    def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], smoothing=NGramConstants.NONE, k=1, most_likely=False):
         """Returns a randomly generated sentence."""
         if self.n != len(sentence):
             sentence = [NGramConstants.B_OF_SENTENCE]
