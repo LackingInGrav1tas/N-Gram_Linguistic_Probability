@@ -50,8 +50,14 @@ class Map:
         if self.contains(k):
             self.vals[self.keys.index(k)] = v
 
+def smooth(found, words, total, smoothing, k=1):
+    if smoothing == NGramConstants.LAPLACE:
+        return ( (found + k)  / ( words + total) )
+    else:
+        return ( found  / words )
+
 class NGramModel:
-    def __init__(self, n, corpus, normalize=False, smoothing=NGramConstants.NONE):
+    def __init__(self, n, corpus, normalize=False):
         """Initializes an n-gram. The param n determines the pattern length"""
         self.normalize = normalize
         if normalize:
@@ -79,6 +85,8 @@ class NGramModel:
             if not words.contains(trange):
                 words.add(trange, 0)
             words.change(trange, words.get(trange) + 1)
+        
+        self.word_len = len(words.keys)
 
         follow_count = Map()
 
@@ -90,17 +98,12 @@ class NGramModel:
         
         self._probabilities = Map()
 
-        if smoothing == NGramConstants.LAPLACE:
-            for i in range(len(follow_count.keys)):
-                key = follow_count.keys[i]
-                self._probabilities.add( key, (follow_count.get( key ) + 1)  / ( words.get(key[0]) + len(words.keys)) )
-        else:
-            for i in range(len(follow_count.keys)):
-                key = follow_count.keys[i]
-                self._probabilities.add( key, follow_count.get( key )  / words.get(key[0]) )
+        for i in range(len(follow_count.keys)):
+            key = follow_count.keys[i]
+            self._probabilities.add( key, ( follow_count.get( key ),  words.get(key[0]) ) )
 
 
-    def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], most_likely=False):
+    def random_sentence(self, sentence=[NGramConstants.B_OF_SENTENCE], smoothing=NGramConstants.NONE, most_likely=False):
         """Returns a randomly generated sentence."""
         if self.n != len(sentence):
             sentence = [NGramConstants.B_OF_SENTENCE]
@@ -126,12 +129,14 @@ class NGramModel:
                 for i in range(len(self._probabilities.keys)):
                     key = self._probabilities.keys[i]
                     if key[0] == sentence[-self.n:]:
-                        if self._probabilities.vals[i] > most[1]:
-                            most = (key[1], self._probabilities.vals[i])
+                        x = self._probabilities.vals[i]
+                        prob = smooth(x[0], x[1], self.word_len, smoothing, k)
+                        if prob > most[1]:
+                            most = (key[1], prob)
                 sentence.append(most[0])
         return sentence
 
-    def probability(self, pattern, word):
+    def probability(self, pattern, word, smoothing=NGramConstants.NONE, k=1):
         """"Analyzes how many times a pattern, with n words, occurs followed by specified word"""
         if self.normalize:
             pattern = pattern.lower()
@@ -157,9 +162,10 @@ class NGramModel:
                     pat.append(NGramConstants.B_OF_SENTENCE)
             else:
                 pat.append(tokens[i])
-        return self._probabilities.get((pat, word))
+        p = self._probabilities.get((pat, word))
+        return smooth( p[0], p[1], self.word_len,  smoothing, k )
 
-    def sent_probability(self, sentence, type=NGramConstants.LOGARITHMIC):
+    def sent_probability(self, sentence, type=NGramConstants.LOGARITHMIC, smoothing=NGramConstants.NONE, k=1):
         """Returns the probability of a sentence occuring"""
         if self.normalize:
             sentence = sentence.lower()
@@ -186,13 +192,15 @@ class NGramModel:
         if type == NGramConstants.DECIMAL:
             p = 1
             for i in range(self.n, len(pat)):
-                p *= self._probabilities.get((pat[i-self.n:i], pat[i]))
+                x = self._probabilities.get((pat[i-self.n:i], pat[i]))
+                p *= smooth(x[0], x[1], self.word_len, smoothing, k)
             return p
         else: # Logarithmic prevents underflow
             p = 0
             for i in range(self.n, len(pat)):
                 try:
-                    p += math.log(self._probabilities.get((pat[i-self.n:i], pat[i])))
+                    x = self._probabilities.get((pat[i-self.n:i], pat[i]))
+                    p += math.log(smooth(x[0], x[1], self.word_len, smoothing, k))
                 except ValueError:
                     print("probability error. pat:", pat[i-self.n:i], pat[i])
                     print((pat[i-self.n:i], pat[i]) in self._probabilities.keys)

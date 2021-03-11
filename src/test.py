@@ -3,9 +3,9 @@ from nltk.corpus import gutenberg
 
 # takes quite a while to complete
 bigram = ngram.NGramModel(2, "this is the corpus. this also is the corpus.", True)
-print(bigram.probability("this", "is"))
-bigram = ngram.NGramModel(2, "this is the corpus. this also is the corpus.", True, ngram.NGramConstants.LAPLACE)
-print(bigram.probability("this", "is"))
+rs = ngram.detokenize(bigram.random_sentence())
+print(rs, "-> ", bigram.sent_probability("this also is the corpus.", smoothing=ngram.NGramConstants.LAPLACE))
+print(bigram.probability("this", "is", smoothing=ngram.NGramConstants.LAPLACE))
 
 for file in gutenberg.fileids():
     print(file, len(gutenberg.raw(file)))
