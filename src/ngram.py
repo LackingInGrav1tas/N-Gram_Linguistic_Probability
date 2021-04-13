@@ -2,6 +2,7 @@ import nltk
 import enum
 import math
 import random
+import pickle
 
 class NGramConstants(enum.Enum):
     B_OF_SENTENCE = 1
@@ -198,6 +199,15 @@ class NGramModel:
                     print((pat[i-self.n:i], pat[i]) in self._probabilities.keys)
                     exit()
             return math.exp(p)
+
+def save_ngram(ngram, path):
+    """Saves ngram to a binary file at path"""
+    with open(path, "wb") as file:
+        pickle.dump(ngram, file)
+def load_ngram(path):
+    """Returns an ngram object stored at path"""
+    with open(path, "rb") as file:
+        return pickle.load(file)
 
 def main():
     print("N-Gram Demonstration:\n")

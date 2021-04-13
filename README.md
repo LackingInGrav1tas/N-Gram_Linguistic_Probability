@@ -48,6 +48,16 @@ detokenize(tokens)
 ```
 Returns a string from a set of tokens.
 
+```Python
+save_ngram(ngram, path)
+```
+Saves an ngram object, ```ngram```, to a binary file at ```path```.
+
+```Python
+load_ngram(path)
+```
+Loads an ngram object stored at ```path```.
+
 ## Example: ##
 ```
 from ngram import NGramModel
